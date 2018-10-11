@@ -1,20 +1,7 @@
-/*
-    Packet sniffer using libpcap library
-*/
 #include "pcap/pcap.h"
-#include <stdio.h>
-#include <stdlib.h> // for exit()
-#include <string.h> //for memset
-#include <sys/socket.h>
-#include <stdint.h>
- 
-#include <sys/socket.h>
-// #include <arpa/inet.h> // for inet_ntoa()
-// #include <net/ethernet.h>
-// #include <netinet/ip_icmp.h>   //Provides declarations for icmp header
-// #include <netinet/udp.h>   //Provides declarations for udp header
-// #include <netinet/tcp.h>   //Provides declarations for tcp header
-// #include <netinet/ip.h>    //Provides declarations for ip header
+#include <stdlib.h> 
+#include <string.h> 
+#include <time.h>
 
 #define RED   "\x1B[31m"
 #define GRN   "\x1B[32m"
@@ -32,7 +19,7 @@ typedef struct {
     uint16_t destination;
     uint16_t lenght;
     uint16_t checksum; 
-    char data[10];   
+    char data[100];   
 }UDP;
 
 typedef struct {
@@ -50,7 +37,7 @@ typedef struct {
 
 
 typedef struct {
-    uint8_t destinadion[6];
+    uint8_t destination[6];
     uint8_t source[6];
     uint16_t type;
 }Ethernet;
@@ -62,22 +49,10 @@ uint16_t swapping(uint16_t value){
     return result;
 }
 
-// uint8_t *swappingEthernet(uint8_t *value){
-//     uint16_t *result = {value[5],value[4],value[3],value[2],value[1],value[0]};
-//     return result;
-// }
-
 void process_packet(u_char *, const struct pcap_pkthdr *, const u_char *);
-// void process_ip_packet(const u_char * , int);
-// void print_ip_packet(const u_char * , int);
-// void print_tcp_packet(const u_char *  , int );
-// void print_udp_packet(const u_char * , int);
-// void print_icmp_packet(const u_char * , int );
-// void PrintData (const u_char * , int);
- 
-// FILE *logfile;
-// struct sockaddr_in source, dest;
-// int tcp=0,udp=0,icmp=0,others=0,igmp=0,total=0,i,j; 
+void print_ethernet_address(uint8_t *eth_add);
+void print_ipv4_address(uint32_t ip_add);
+void printTime ();
  
 int main(int argc, char **argv){
 
@@ -89,7 +64,8 @@ int main(int argc, char **argv){
         devname = argv[1];
     }
      
-    printf("------------- Sniffing in device %s ... " , devname);
+    printf("---------------------------------\n");
+    printf(" Sniffing in device %s ... " , devname);
     handle = pcap_open_live(devname , 65536 , 1 , 0 , errbuf);
      
     if (handle == NULL) {
@@ -99,12 +75,6 @@ int main(int argc, char **argv){
     }
     printf(GRN"OK\n"RESET);
      
-    // logfile=fopen("log.txt","w");
-    // if(logfile==NULL) 
-    // {
-    //     printf("Unable to create file.");
-    // }
-     
     //Put the device in sniff loop
     printf(CYN"------------- Start -------------\n"RESET);
     pcap_loop(handle , -1 , process_packet , NULL);
@@ -113,18 +83,16 @@ int main(int argc, char **argv){
 }
 
 
+
  
 void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *buffer){
 
-    printf("Size Ethernet: %lu\n", sizeof(Ethernet));
-    printf("Size IPv4: %lu\n", sizeof(IPv4));
-    printf("Size UDP: %lu\n", sizeof(UDP));
-    printf("-------------------------------\n");
+    /*SHOW ALL BYTES*/
+    /*
     int size = header->len;
-    for(int i =0; i < size; i++){
+    for(int i = 0; i < size; i++){
         printf("%02x ", buffer[i]);
-
-    }
+    }*/
 
     Ethernet *eth;
     IPv4 *ipv4;
@@ -132,28 +100,68 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
 
     eth = (Ethernet*) buffer;
 
-    /*Está pegando invertido*/
     if(swapping(eth->type) == 0x0800){
-
-        printf("-------------------------------\n");
-        printf("Ethernet Type: "GRN"0x%04X (IPv4)"RESET"\n", swapping(eth->type));
-        // printf("Ethernet Source: "GRN"0x%012X (IPv4)"RESET"\n", swappingEthernet(eth->source));
         
         ipv4 = (IPv4*) (eth + 1);
 
-        if(ipv4->protocol == 0x11){
-            printf("IPv4 Protocol: "GRN"0x%x (UDP)"RESET"\n", ipv4->protocol);
+        if(ipv4->protocol == 0x11){        
 
             udp = (UDP*) (ipv4 + 1);
 
             int udp_size_data = swapping(udp->lenght) - UDP_SIZE_HEADER;
-            
-            printf("UDP Size data: "GRN"%u bytes"RESET"\n", udp_size_data);
-            printf("Data: " GRN "%s" RESET "\n", udp->data);
-        }else{
-            printf("IPv4 Protocol: "RED"0x%02x (UDP)"RESET"\n", ipv4->protocol);
+            char udp_data [udp_size_data];
+            strcpy(udp_data, udp->data);
+            udp_data[udp_size_data-1] = '\0';
+
+            uint16_t udp_destination = swapping(udp->destination);
+
+            if(udp_destination == 1234){
+                printTime();
+                // printf("Ethernet Type: "GRN"0x%04X (IPv4)"RESET"\n", swapping(eth->type));
+                printf("Ethernet Source: ");
+                print_ethernet_address(eth->source);
+                printf("Ethernet Destination: ");
+                print_ethernet_address(eth->destination);
+                printf("IPv4 Source: ");
+                print_ipv4_address(ipv4->source);
+                printf("IPv4 Destination: ");
+                print_ipv4_address(ipv4->destination);
+                printf("IPv4 Protocol: "GRN"0x%x (UDP)"RESET"\n", ipv4->protocol);
+                printf("UDP Source: "GRN"%u"RESET"\n", swapping(udp->source));
+                printf("UDP Destination: "GRN"%u"RESET"\n", swapping(udp->destination));
+                printf("UDP Size data: "GRN"%u bytes"RESET"\n", udp_size_data);
+                printf("Data: " GRN "%s" RESET "\n", udp_data);
+                 printf("---------------------------------\n");
+            }
         }
     }
     
 }
  
+
+void print_ethernet_address(uint8_t *eth_add){
+    printf(GRN);
+    for(int i =5; i >=0; i--){
+        printf("%02x", eth_add[i]);
+        if(i!=0) printf(":");
+    }
+    printf(RESET"\n");
+}
+
+void print_ipv4_address(uint32_t ip_add){
+    uint8_t ip_adrs_0 =  (ip_add & 0x000000ff);
+    uint8_t ip_adrs_1 =  (ip_add & 0x0000ff00) >> 8;
+    uint8_t ip_adrs_2 =  (ip_add & 0x00ff0000) >> 16;
+    uint8_t ip_adrs_3 =  (ip_add & 0xff000000) >> 24;
+    printf(GRN);
+    printf("%d.%d.%d.%d", ip_adrs_0, ip_adrs_1, ip_adrs_2, ip_adrs_3 );
+    printf(RESET"\n");
+}
+
+
+void printTime () {
+    char buff[100];
+    time_t now = time (0);
+    strftime (buff, 100, "%H:%M:%S.000", localtime (&now));
+    printf ("Time: "YEL"%s\n"RESET, buff);
+}
