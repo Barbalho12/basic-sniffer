@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdint.h>
+#include <string.h>
 
 
 #define RED   "\x1B[31m"
@@ -14,12 +15,15 @@
 
 #define UDP_SIZE_HEADER 8
 
+#define IPV4_ETHERNET_TYPE_CODE 0x0800
+#define UDP_PROTOCOL_CODE 0x11
+
 typedef struct {
     uint16_t source;
     uint16_t destination;
     uint16_t lenght;
     uint16_t checksum; 
-    char data[10];   
+    char data [1000];   
 }UDP;
 
 typedef struct {
@@ -67,17 +71,23 @@ int main(){
 	eth = (Ethernet*) buffer;
 
 	/*Está pegando invertido*/
-	if(eth->type == 0x0008){
+	if(swapping(eth->type) == IPV4_ETHERNET_TYPE_CODE){
+
 		printf("Ethernet Type: "GRN"%04X (IPv4)"RESET"\n", swapping(eth->type));
 		
 		ipv4 = (IPv4*) (eth + 1);
 
-		if(ipv4->protocol == 0x11){
+		if(ipv4->protocol == UDP_PROTOCOL_CODE){
+			
 			printf("IPv4 Protocol: "GRN"%x (UDP)"RESET"\n", ipv4->protocol);
 
 			udp = (UDP*) (ipv4 + 1);
+
+			int size_udp_payload = swapping(udp->lenght) - UDP_SIZE_HEADER;
+
 			
-			printf("UDP Size data: "GRN"%u bytes"RESET"\n", swapping(udp->lenght) - UDP_SIZE_HEADER);
+			printf("UDP Size data: "GRN"%d bytes"RESET"\n", size_udp_payload);
+
 			printf("Data: " GRN "%s" RESET "\n", udp->data);
 		}
 	}
