@@ -119,7 +119,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
                 printf("Menssage Type: "BLU"%02x\n"RESET, data[0]);
                 printf("Menssage Enrollment: "BLU);
                 for(int i = 0; i < 8; i++){
-                    printf("%u", data[1+i]);
+                    printf("%c", data[1+i]);
                     if(i==7) printf("\n"RESET);
                 }
 
@@ -146,11 +146,20 @@ void show_buffer(const u_char *buffer, int size){
     printf("\n-------------------------\n");
 }
 
+// void print_ethernet_address(uint8_t *eth_add){
+//     printf(GRN);
+//     for(int i =5; i >=0; i--){
+//         printf("%02x", eth_add[i]);
+//         if(i!=0) printf(":");
+//     }
+//     printf(RESET"\n");
+// }
+
 void print_ethernet_address(uint8_t *eth_add){
     printf(GRN);
-    for(int i =5; i >=0; i--){
+    for(int i = 0; i < 6; i++){
         printf("%02x", eth_add[i]);
-        if(i!=0) printf(":");
+        if(i!=5) printf(":");
     }
     printf(RESET"\n");
 }
