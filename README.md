@@ -1,7 +1,26 @@
 # Sniffer
 <p align="center"><img src="https://media.giphy.com/media/9XZyr2dtPQDEY4dviP/giphy.gif" /></p>
+<p align="center">Program for monitoring network packets</p>
 
-Program for monitoring network packets
+sniffer is listening by default with filter:
+* Interface: `lo`
+* Protocol: `UDP`
+* Port: `1234`
+
+And search for messages of two types:
+
+### Type 1
+
+| Type | Enrollment | Name Lenght | Name | 
+| :------------: | :------------ | :------------ |  :------------ |
+| 1 Byte | 8 Bytes | 2 Bytes | According to `Name Lenght`	| 
+
+### Type 2
+
+| Type | Enrollment | 
+| :------------: | :------------ |
+| 1 Byte | 8 Bytes | 
+
 
 ### Download libpcap
 
@@ -23,7 +42,7 @@ gcc sender.c -o sender
 
 For the sniffer add the interface in which you will be listening as a parameter
 
-And for the sender add: the interface, the destination mac, the destination ip, the port, the registration, and the student's name (message type and name size will be inferred)
+And for the sender add: the interface, the destination mac, the destination ip, the port, the enrollment, and the student's name (message type and name size will be inferred)
 
 ```sh
 # In Terminal 1 
