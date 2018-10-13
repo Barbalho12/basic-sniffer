@@ -1,4 +1,5 @@
 # Sniffer
+<p align="center"><img src="https://media.giphy.com/media/9XZyr2dtPQDEY4dviP/giphy.gif" /></p>
 
 Program for monitoring network packets
 
