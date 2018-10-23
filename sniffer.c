@@ -50,7 +50,7 @@ void show_buffer(const u_char *buffer, int size);
  
 int main(int argc, char **argv){
 
-    char *devname = "any";
+    char *devname = "lo";
     pcap_t *handle;
     char errbuf[100];
 
