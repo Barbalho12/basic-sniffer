@@ -128,7 +128,7 @@ int main(int argc, char **argv){
 	int sockfd;
 	struct sockaddr_ll param;
 	int n, ifindex;
-	uint8_t frame[200]; //sizeof(struct arphdr)
+	uint8_t frame[65579]; //sizeof(struct arphdr)
 	struct ifreq ifr;
 	int tam=0;
 	struct iphdr *iph;
@@ -169,8 +169,8 @@ int main(int argc, char **argv){
 	iph->frag_off=0;
 	iph->ttl=0x40;
 	iph->protocol=0x11; // 17 em Decimal
-	iph->check=0x0;
-	memcpy(&iph->saddr,"\x7f\x01\x01\x01",4); //127.1.1.1 - Pode forcar o Ip de origem
+	iph->check=0x0;   //10.1.1.1
+	memcpy(&iph->saddr,"\x0a\x01\x01\x01",4); //127.1.1.1 - Pode forcar o Ip de origem
 	memcpy(&iph->daddr, ip_address,4); //127.0.0.1
 
 
@@ -184,8 +184,8 @@ int main(int argc, char **argv){
 	char mens[TAMANHO_DA_MENS];
 	mens[0] = mens_type;
 	memcpy(&mens[1], mens_matr, 8);
-	mens[9] = (uint8_t) name_length >> 8;
-	mens[10] = (uint8_t) (name_length & 0x00ff);
+	mens[9] = (name_length >> 8);
+	mens[10] = (name_length & 0x00ff);
 	memcpy(&mens[11], mens_name, name_length);
 	memcpy(p, mens, TAMANHO_DA_MENS);
 	tam = 20 + 8 + TAMANHO_DA_MENS;

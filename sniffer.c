@@ -124,7 +124,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
                 }
 
                 if(data[0] == 1){
-                    uint16_t nome_length = (((uint16_t) data[9])<<8) + (uint16_t) data[10];
+                    uint16_t nome_length = (((uint16_t) data[9])<<8) + (uint8_t) data[10];
                     printf("Menssage Name Lenght: "BLU"%u\n"RESET, nome_length);
                     printf("Menssage Name: "BLU);
                     for(int i = 0; i < nome_length; i++){
