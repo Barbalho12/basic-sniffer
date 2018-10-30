@@ -146,15 +146,6 @@ void show_buffer(const u_char *buffer, int size){
     printf("\n-------------------------\n");
 }
 
-// void print_ethernet_address(uint8_t *eth_add){
-//     printf(GRN);
-//     for(int i =5; i >=0; i--){
-//         printf("%02x", eth_add[i]);
-//         if(i!=0) printf(":");
-//     }
-//     printf(RESET"\n");
-// }
-
 void print_ethernet_address(uint8_t *eth_add){
     printf(GRN);
     for(int i = 0; i < 6; i++){
