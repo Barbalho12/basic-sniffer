@@ -12,32 +12,19 @@
 #include <linux/if.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
-//#include <net/if_arp.h>
-#include <sys/uio.h>
-
 #include <arpa/inet.h>
-#include <sys/types.h>
-//#include <netpacket/packet.h>
-#include <net/ethernet.h> /* the L2 protocols */
-
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <linux/ip.h>
 #include <linux/udp.h>
-
-
-#define DEVNAME "lo"
-#define IP "127.0.0.1"
-#define PORT 4321
-#define MENSSAGE_NAME "teste"
 
 char *device;
 int mens_type;
 int port;
 char *mens_name;
 uint16_t name_length;
-uint8_t ip_address[4]; 
+uint8_t ip_src[4];
+uint8_t ip_address[4];
 uint8_t mac_address[6]; 
 char *mens_matr;
 
@@ -80,7 +67,6 @@ int init(int argc, char **argv){
 	//GET IP
 	int i = 0;
 	uint8_t temp = 0;
-	// uint8_t ip_address[4]; 
 	int index = 0;
 	int count_decimal = 1;
 	while(ip[i] != 0x00 ){
@@ -101,7 +87,6 @@ int init(int argc, char **argv){
 	//GET MAC
 	i = 0;
 	char temp_ [2];
-	// uint8_t mac_address[6]; 
 	index = 0;
 	int count_hex = 0;
 	while(mac_s[i] != 0x00 ){
@@ -148,6 +133,30 @@ int main(int argc, char **argv){
 
 	printf("ifindex=%d\n", ifindex); 
 
+	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ - 1);
+	ioctl(sockfd, SIOCGIFADDR, &ifr);
+
+	char *ip_interface = inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr);
+	// printf("%u\n", strlen(ip_interface));
+
+	// printf("%s\n", inet_ntoa(((struct sockaddr_in *) &ifr.ifr_addr)->sin_addr));
+
+	int counter = 0;
+	int order = 1;
+	uint8_t temp = 0;
+	for(int i = 0; i < strlen(ip_interface); i++){
+		if(ip_interface[i] != '.'){
+			temp = (temp * order) + ip_interface[i] - 48;
+			order = 10;
+		}else{
+			ip_src[counter] = temp;
+			counter++;
+			temp = 0;
+			order = 1;
+		}
+	}
+
+	ip_src[3] = temp;
 
 	param.sll_family = PF_PACKET;   /* Always AF_PACKET */
 	param.sll_protocol = htons(ETH_P_IP); /* Physical layer protocol */
@@ -162,18 +171,16 @@ int main(int argc, char **argv){
 
 	iph = (struct iphdr *) frame;
 	iph->ihl = 0x5;
-	iph->version=0x4;
-	iph->tos=0;
-	iph->tot_len= htons(20+8+TAMANHO_DA_MENS);
-	iph->id=0;
-	iph->frag_off=0;
-	iph->ttl=0x40;
-	iph->protocol=0x11; // 17 em Decimal
-	iph->check=0x0;   //10.1.1.1
-	memcpy(&iph->saddr,"\x0a\x01\x01\x01",4); //127.1.1.1 - Pode forcar o Ip de origem
-	memcpy(&iph->daddr, ip_address,4); //127.0.0.1
-
-
+	iph->version = 0x4;
+	iph->tos = 0;
+	iph->tot_len = htons(20+8+TAMANHO_DA_MENS);
+	iph->id = 0;
+	iph->frag_off = 0;
+	iph->ttl = 0x40;
+	iph->protocol = 0x11; // 17 em Decimal
+	iph->check = 0x0;   //10.1.1.1
+	memcpy(&iph->saddr, ip_src, 4); //127.1.1.1 - Pode forcar o Ip de origem
+	memcpy(&iph->daddr, ip_address, 4); //127.0.0.1
 
 	uh = (struct udphdr *)((uint8_t *)iph + 20);
 	uh->source = htons(5000);
