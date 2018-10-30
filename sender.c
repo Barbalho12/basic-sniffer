@@ -1,6 +1,3 @@
-/*
-** Envia pacotes com o ip falso (ip spoofing)
-*/
 #include <stdlib.h>
 #include <sys/param.h>
 #include <sys/socket.h>
